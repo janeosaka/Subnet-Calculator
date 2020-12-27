@@ -37,46 +37,84 @@ def subnet_mask_valid():
             continue
 
 
+# Generate random IP address
+def generate_ip(bst_ip_address, net_ip_address):
+    while True:
+        answer = input("Generate random IP address? [Y/N] ").lower()
+
+        if answer == "y":
+            generated_ip = []
+
+            # Obtain available IP addr in range, based on difference between octets in broadcast addr & network addr
+            for indexb, oct_bst in enumerate(bst_ip_address):
+                for indexn, oct_net in enumerate(net_ip_address):
+                    if indexb == indexn:
+                        if oct_bst == oct_net:
+                            # Add identical octets to the generated_ip list
+                            generated_ip.append(oct_bst)
+                        else:
+                            generated_ip.append(str(random.randint(int(oct_net), int(oct_bst))))
+
+            random_ip = ".".join(generated_ip)
+            print("Random IP address is: %s" % random_ip)
+            continue
+        else:
+            return
+
+
+# Convert mask to binary string
+def mask_to_bin_string(mask_octets):
+    mask_octets_binary = []
+
+    for octet in mask_octets:
+        binary_octet = bin(int(octet)).lstrip('0b')
+        mask_octets_binary.append(binary_octet.zfill(8))  # padding to fill up all bin octet length that are <8 bit
+
+    binary_mask = "".join(mask_octets_binary)
+    return binary_mask
+
+
+# Convert IP to binary string
+def ip_to_bon_string(ip_octets):
+    ip_octets_binary = []
+
+    for octet in ip_octets:
+        binary_octet = bin(int(octet)).lstrip('0b')
+        ip_octets_binary.append(binary_octet.zfill(8))
+
+    binary_ip = "".join(ip_octets_binary)
+    return binary_ip
+
+
+# Getting wildcard masks
+def generate_wildcard_mask(mask_octets):
+    wildcard_octets = []
+
+    for octet in mask_octets:
+        wild_octet = 255 - int(octet)
+        wildcard_octets.append(str(wild_octet))
+
+    wildcard_mask = ".".join(wildcard_octets)
+    return wildcard_mask
+
+
 def subnet_calculator():
     try:  # handle keyboard interrupting commands
         print()
 
         ip_octets = ip_valid()
         mask_octets = subnet_mask_valid()
-
-        # Convert mask to binary string
-        mask_octets_binary = []
-
-        for octet in mask_octets:
-            binary_octet = bin(int(octet)).lstrip('0b')
-            mask_octets_binary.append(binary_octet.zfill(8))  # padding to fill up all bin octet length that are <8 bit
-
-        binary_mask = "".join(mask_octets_binary)
+        binary_mask = mask_to_bin_string(mask_octets)
 
         # Counting host bits in the mask and calculating number of hosts/subnet
         no_of_zeros = binary_mask.count("0")
         no_of_ones = 32 - no_of_zeros
         no_of_hosts = abs(2 ** no_of_zeros - 2)  # taking into account of /32 subnet
 
-        wildcard_octets = []
-
-        for octet in mask_octets:
-            wild_octet = 255 - int(octet)
-            wildcard_octets.append(str(wild_octet))
-
-        wildcard_mask = ".".join(wildcard_octets)
-
-        # Convert IP to binary string
-        ip_octets_binary = []
-
-        for octet in ip_octets:
-            binary_octet = bin(int(octet)).lstrip('0b')
-            ip_octets_binary.append(binary_octet.zfill(8))
-
-        binary_ip = "".join(ip_octets_binary)
+        wildcard_mask = generate_wildcard_mask(mask_octets)
+        binary_ip = ip_to_bon_string(ip_octets)
 
         # Get network address and broadcast address
-
         network_address_binary = binary_ip[:no_of_ones] + "0" * no_of_zeros
         broadcast_address_binary = binary_ip[:no_of_ones] + "1" * no_of_zeros
 
@@ -116,27 +154,7 @@ def subnet_calculator():
         print("Mask bits: %s" % no_of_ones)
         print("\n")
 
-        while True:
-            answer = input("Generate random IP address? [Y/N] ").lower()
-
-            if answer == "y":
-                generated_ip = []
-
-                # Obtain available IP addr in range, based on difference between octets in broadcast addr & network addr
-                for indexb, oct_bst in enumerate(bst_ip_address):
-                    for indexn, oct_net in enumerate(net_ip_address):
-                        if indexb == indexn:
-                            if oct_bst == oct_net:
-                                # Add identical octets to the generated_ip list
-                                generated_ip.append(oct_bst)
-                            else:
-                                generated_ip.append(str(random.randint(int(oct_net), int(oct_bst))))
-
-                random_ip = ".".join(generated_ip)
-                print("Random IP address is: %s" % random_ip)
-                continue
-            else:
-                break
+        generate_ip(bst_ip_address, net_ip_address)
 
     except KeyboardInterrupt:
         print("bla")
